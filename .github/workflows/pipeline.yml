@@ -1,0 +1,65 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: serenity_api_v2
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PAT }}
+  AWS_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          registry: docker.io
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+      - name: Build Docker Image
+        run: docker build -t ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest .
+      - name: Push Docker Image to Docker Hub
+        run: docker push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Pull Docker Image from Docker Hub
+        run: docker pull ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+      - name: Run Tests
+        run: docker run --rm ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest python3 -m pytest
+  deploy:
+    needs: test
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into EC2 instance and start Docker container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          password: ${{ secrets.EC2_PASSWORD }}
+          script: |
+            # Install Docker (if not already installed)
+            sudo apt-get update
+            sudo apt-get install docker.io -y
+            # Login into docker
+            docker login -u=${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
+            # Stop all docker containers before running new one
+            docker kill $(docker ps -q)
+            # pull latest version of image
+            docker pull ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            # Start Docker container
+            docker run -p 3000:3000 -d -e AWS_COGNITO_CLIENT_ID=${{ secrets.AWS_COGNITO_CLIENT_ID }} -e AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} -e AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} umikami/serenity_api_v1:latest
