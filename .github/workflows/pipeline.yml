@@ -62,4 +62,4 @@ jobs:
             # pull latest version of image
             docker pull ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             # Start Docker container
-            docker run -p 3000:3000 -d -e AWS_COGNITO_CLIENT_ID=${{ secrets.AWS_COGNITO_CLIENT_ID }} -e AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} -e AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} umikami/serenity_api_v1:latest
+            docker run -p 3000:3000 -d -e AWS_COGNITO_CLIENT_ID=${{ secrets.AWS_COGNITO_CLIENT_ID }} -e AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} -e AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
