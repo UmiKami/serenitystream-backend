@@ -6,6 +6,7 @@ import botocore
 from datetime import datetime
 import time
 
+
 # Set up blueprint to which prefix will be applied
 api = Blueprint("api", __name__)
 
@@ -28,13 +29,37 @@ AWS_REGION = "us-east-1"  # some methods require region to be specify
 def home():
     return 'Peace sweet peace! <strong> Your Yoga API! <strong>'
 
-@api.route("/video", methods=["POST"])
+@api.route("/videos/public", methods=["GET"])
+def get_all_videos():
+    response = db.scan(
+        TableName="serenity_videos",
+        Limit=20,
+        Select="ALL_ATTRIBUTES"
+    )
+
+    comments = response["Items"][0]["comments"]["SS"]
+
+    # turns comment strings into proper dictionaries
+    for index, comment in enumerate(comments):
+        comments[index] = json.loads(comment)
+
+
+    return jsonify(response), 200
+
+@api.route("/videos", methods=["POST"])
 def upload_file():
+    body_request = request.get_json(force=True)
+    token = request.headers.get("Authorization").split(" ")[1]
     video = request.files.get("video")
+
+    video_title = body_request["title"]
+    video.filename = video_title
 
     if video is not None:
         s3.upload_fileobj(video, BUCKET_NAME, video.filename)
         return jsonify("Video upload DONE and is now being processed!"), 201
+    if token:
+        return jsonify(token),200
     
     return jsonify("There was an error uploading the video!"), 400
 
