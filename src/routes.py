@@ -30,6 +30,10 @@ AWS_REGION = "us-east-1"  # some methods require region to be specify
 def home():
     return 'Peace sweet peace! <strong> Your Yoga API! <strong>'
 
+######################################################
+### VIDEO SECTION
+
+
 @api.route("/videos/public", methods=["GET"])
 def get_all_videos():
     response = db.scan(
@@ -71,6 +75,26 @@ def upload_file():
         return jsonify("Video upload DONE and is now being processed!"), 201
     
     return jsonify("There was an error uploading the video!"), 400
+
+
+@api.route("/videos/<string:id>", methods=['GET'])
+def get_video_details(id):
+    videoDetails = db.get_item(TableName="serenity_videos", Key={ 
+        "id": {
+            "S": id
+        }
+    })
+
+    if "Item" in videoDetails:
+        return jsonify(videoDetails), 200
+    
+    return jsonify("video does not exist"), 400
+
+
+
+
+######################################################
+### AUTH SECTION
 
 @api.route("/auth/signup", methods=["POST"])
 def create_user_account():
