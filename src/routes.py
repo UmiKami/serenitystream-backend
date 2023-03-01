@@ -147,7 +147,48 @@ def add_comment_to_video(id):
 
         return jsonify({'message': 'Error adding comment'}), 500
 
-    
+@api.route("/videos/<string:id>/rate/<int:rating>", methods=["POST"])
+def rate_video(id, rating):
+
+    if rating < 1 or rating > 5:
+        return jsonify("Rating out of range, should be [1-5] but got " + str(rating)), 400
+
+    try:
+        # Get the existing item from DynamoDB
+        response = db.get_item(
+            TableName='serenity_videos',
+            Key={'id': {'S': id}}
+        )
+
+        item = response['Item']
+        
+        # Update the rating attribute
+        rating_json = json.loads(item['rating']['S'])
+        rating_action_count = int(rating_json['ratingActionCount']) + 1
+        actual_rating = float(rating_json['actualRating'])
+        actual_rating = (actual_rating * (rating_action_count - 1) + rating) / rating_action_count
+        rating_json['ratingActionCount'] = str(rating_action_count)
+        rating_json['actualRating'] = str(actual_rating)
+        
+        db.update_item(
+            TableName='serenity_videos',
+            Key={'id': {'S': id}},
+            UpdateExpression='SET rating = :val',
+            ExpressionAttributeValues={
+                ':val': {'S': json.dumps(rating_json)}
+            }
+        )
+        
+        # Return a success message
+        return jsonify({'message': 'Rating updated successfully', "rating": actual_rating})
+        
+    except botocore.exceptions.ClientError as e:
+        # Return an error message if the item cannot be retrieved or updated
+        print(e)
+
+        return jsonify({'message': 'Error updating rating'}), 500
+
+
 
 
 ######################################################
