@@ -6,6 +6,7 @@ import botocore
 from datetime import datetime
 import time
 import re
+from ast import literal_eval
 
 
 # Set up blueprint to which prefix will be applied
@@ -86,11 +87,66 @@ def get_video_details(id):
     })
 
     if "Item" in videoDetails:
+        comments = videoDetails["Item"]["comments"]["SS"]
+
+        # turns array of strings to array of json objects
+        for index, comment in enumerate(comments):
+            comments[index] = literal_eval(json.loads(json.dumps(comment)))
+
         return jsonify(videoDetails["Item"]), 200
     
     return jsonify("video does not exist"), 400
 
+@api.route("/videos/<string:id>/comment", methods=["POST"])
+def add_comment_to_video(id):
+    body_request =  request.get_json(force=True)
+    token = request.headers.get("Authorization").split(" ")[1]
+    
+    try:
+        user = auth.get_user(AccessToken = token)
+        username = user["Username"]
+    except (botocore.exceptions.ClientError) as err:
+        error_code = err.response["Error"]['Code']
 
+        if error_code == "NotAuthorizedException":
+            return jsonify("Invalid session!"), 400
+        
+    comment = {
+        "username": username,
+        "content": body_request["comment"]
+    }
+
+    try:
+        # Get the existing item from DynamoDB
+        response = db.get_item(
+            TableName='serenity_videos',
+            Key={'id': {'S': id}}
+        )
+
+        item = response['Item']
+        
+        # Update the 'comments' attribute with the new comment
+        existing_comments = item['comments']['SS']
+        existing_comments.append(str(comment))
+        db.update_item(
+            TableName='serenity_videos',
+            Key={'id': {'S': id}},
+            UpdateExpression='SET comments = :val',
+            ExpressionAttributeValues={
+                ':val': {'SS': existing_comments}
+            }
+        )
+        
+        # Return a success message
+        return jsonify({'message': 'Comment added successfully'})
+        
+    except botocore.exceptions.ClientError as e:
+        # Return an error message if the item cannot be retrieved or updated
+        print(e)
+
+        return jsonify({'message': 'Error adding comment'}), 500
+
+    
 
 
 ######################################################
