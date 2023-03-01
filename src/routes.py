@@ -50,7 +50,7 @@ def get_all_videos():
 @api.route("/videos", methods=["POST"])
 def upload_file():
     token = request.headers.get("Authorization").split(" ")[1]
-    video = request.files.get("video")
+    video = request.files.get("videoFile")
     video_title = request.form.get("videoTitle")
     video_title = re.sub(" +", " ", video_title )
     try:
@@ -60,7 +60,7 @@ def upload_file():
         error_code = err.response["Error"]['Code']
 
         if error_code == "NotAuthorizedException":
-            return jsonify("Invalid session!")
+            return jsonify("Invalid session!"), 400
 
     if video_title is None:
         return jsonify("No video title privided!"), 400
