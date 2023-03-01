@@ -86,7 +86,7 @@ def get_video_details(id):
     })
 
     if "Item" in videoDetails:
-        return jsonify(videoDetails), 200
+        return jsonify(videoDetails["Item"]), 200
     
     return jsonify("video does not exist"), 400
 
