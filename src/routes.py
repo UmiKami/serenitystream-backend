@@ -43,11 +43,12 @@ def get_all_videos():
         Select="ALL_ATTRIBUTES"
     )
 
-    comments = response["Items"][0]["comments"]["SS"]
 
     # turns comment strings into proper dictionaries
-    for index, comment in enumerate(comments):
-        comments[index] = json.loads(comment)
+    for item in response["Items"]:
+        comments = item["comments"]["SS"]
+        for index, comment in enumerate(comments):
+            comments[index] = literal_eval(json.loads(json.dumps(comment)))
 
 
     return jsonify(response), 200
