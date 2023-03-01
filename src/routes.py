@@ -5,6 +5,7 @@ import boto3
 import botocore
 from datetime import datetime
 import time
+import re
 
 
 # Set up blueprint to which prefix will be applied
@@ -48,18 +49,26 @@ def get_all_videos():
 
 @api.route("/videos", methods=["POST"])
 def upload_file():
-    body_request = request.get_json(force=True)
     token = request.headers.get("Authorization").split(" ")[1]
     video = request.files.get("video")
+    video_title = request.form.get("videoTitle")
+    video_title = re.sub(" +", " ", video_title )
+    try:
+        user = auth.get_user(AccessToken = token)
+        username = user["Username"]
+    except (botocore.exceptions.ClientError) as err:
+        error_code = err.response["Error"]['Code']
 
-    video_title = body_request["title"]
-    video.filename = video_title
+        if error_code == "NotAuthorizedException":
+            return jsonify("Invalid session!")
+
+    if video_title is None:
+        return jsonify("No video title privided!"), 400
 
     if video is not None:
+        video.filename = username + "^" + video_title + ".mp4"
         s3.upload_fileobj(video, BUCKET_NAME, video.filename)
         return jsonify("Video upload DONE and is now being processed!"), 201
-    if token:
-        return jsonify(token),200
     
     return jsonify("There was an error uploading the video!"), 400
 
