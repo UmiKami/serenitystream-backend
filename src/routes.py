@@ -89,13 +89,13 @@ def get_video_details(id):
 
     if "Item" in videoDetails:
         comments = videoDetails["Item"]["comments"]["SS"]
-        rating = videoDetails["Item"]["ratin"]["S"]
+        rating = videoDetails["Item"]["rating"]["S"]
 
         # turns array of strings to array of json objects
         for index, comment in enumerate(comments):
             comments[index] = literal_eval(json.loads(json.dumps(comment)))
 
-        rating = literal_eval(json.loads(json.dumps(rating)))
+        videoDetails["Item"]["rating"]["S"] = literal_eval(json.loads(json.dumps(rating)))
 
         return jsonify(videoDetails["Item"]), 200
     
