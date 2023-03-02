@@ -250,7 +250,7 @@ def create_user_account():
 
         return jsonify("Something went wrong"), 400
 
-    return jsonify(aws_auth_res)
+    return jsonify(aws_auth_res), 201
 
 @api.route("/auth/account/verification", methods=["POST"])
 def confirm_registration():
@@ -271,7 +271,7 @@ def confirm_registration():
         return jsonify("Something went wrong! Try again later."), 400
 
 
-    return jsonify(aws_auth_res)
+    return jsonify(aws_auth_res), 200
 
 @api.route("/auth/login", methods=["POST"])
 def signin_user_account():
@@ -297,4 +297,4 @@ def signin_user_account():
 
         return jsonify("Something went wrong"), 400
 
-    return jsonify(aws_auth_res)
+    return jsonify(aws_auth_res), 200
