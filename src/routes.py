@@ -142,7 +142,7 @@ def add_comment_to_video(id):
         )
         
         # Return a success message
-        return jsonify({'message': 'Comment added successfully'})
+        return jsonify({'message': 'Comment added successfully', 'payload': comment})
         
     except botocore.exceptions.ClientError as e:
         # Return an error message if the item cannot be retrieved or updated
