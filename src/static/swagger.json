@@ -1,0 +1,373 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SerenityStream",
+    "description": "This is a REST API written in [Python](https://www.python.org/downloads/release/python-390/) with [Flask](https://flask.palletsprojects.com/en/2.2.x/quickstart/), made for the [SerenityStream](http://serenitystream.tv/) web app. Serenity Yoga Studio provides users with a platform to upload, share, and discover yoga videos. It is built using React on the front end and Amazon DynamoDB as the database. Users can create their own personalized playlists, rate and comment on videos, and connect with other members of the community. The app is designed to cater to yoga enthusiasts of all levels, from beginners to advanced practitioners.\n\nThe API provides full integration with Amazon Web Services. That is where the database, the serverless functions, and the user pool are being hosted. The API uses the Boto3 SDK to connect to AWS. ",
+    "contact": {
+      "email": "ernesto.gonzalez@strategio.tech"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "2.0.0"
+  },
+  "externalDocs": {
+    "description": "Find out more about SerenityStream",
+    "url": "https://github.com/strategio-tech/fp-sim7-keyboard-warriors#readme"
+  },
+  "servers": [
+    {
+      "url": "https://api.serenitystream.tv/api/v2"
+    }
+  ],
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Operations about user and user authentication"
+    },
+    {
+      "name": "media",
+      "description": "Everything about video interactions (e.g. ratings, comments, video upload)"
+    }
+  ],
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register user",
+        "description": "Creates user account in AWS Cognito user pool.",
+        "operationId": "createUserAccount",
+        "requestBody": {
+          "description": "User attributes",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account has been successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "UserConfirmed": {
+                      "type": "boolean"
+                    },
+                    "CodeDeliveryDetails": {
+                      "type": "object",
+                      "properties": {
+                        "Destination": {
+                          "type": "string"
+                        },
+                        "DeliveryMedium": {
+                          "type": "string"
+                        },
+                        "AttributeName": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "UserSub": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Something went wrong, invalid password, or invalid username/email"
+          }
+        }
+      }
+    },
+    "/auth/account/verification": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Confirms user account",
+        "description": "Used to verify the user account by validating the code that was sent to the user through email.",
+        "operationId": "verifyUserAccount",
+        "requestBody": {
+          "description": "User attributes",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "confirmation_code": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account successfully confirmed"
+          },
+          "400": {
+            "description": "Something went wrong."
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Signs user in",
+        "description": "Authenticates user through AWS Cognito. User can use either their username or their email to sign in.",
+        "operationId": "signInUser",
+        "requestBody": {
+          "description": "User credentials must be passed. Send either <u>email</u> **OR** <u>password</u>, **NOT** both.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User has been authorized."
+          },
+          "400": {
+            "description": "Invalid user or password."
+          }
+        }
+      }
+    },
+    "/videos/public": {
+      "get": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Signs user in",
+        "description": "Authenticates user through AWS Cognito. User can use either their username or their email to sign in.",
+        "operationId": "getAllVideos",
+        "responses": {
+          "200": {
+            "description": "Video has been uploaded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Count": {
+                      "type": "number"
+                    },
+                    "Items": {
+                      "type": "object",
+                      "properties": {
+                        "Comments": {
+                          "type": "object",
+                          "properties": {
+                            "SS": {
+                              "type": "array",
+                              "items": {
+                                "type": "object"
+                              }
+                            }
+                          }
+                        },
+                        "id": {
+                          "type": "object",
+                          "properties": {
+                            "S": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "rating": {
+                          "type": "object",
+                          "properties": {
+                            "S": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "thumbnails": {
+                          "type": "object",
+                          "properties": {
+                            "L": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "title": {
+                          "type": "object",
+                          "properties": {
+                            "S": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "uploaded_at": {
+                          "type": "object",
+                          "properties": {
+                            "S": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "username": {
+                          "type": "object",
+                          "properties": {
+                            "S": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/videos": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Uploads videos and processes them",
+        "description": "Videos are uploaded to an S3 bucket waiting on queue for compression and publication to final S3 bucket.",
+        "operationId": "uploadVideo",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "videoTitle": {
+                    "type": "string"
+                  },
+                  "videoFile": {
+                    "type": "object",
+                    "format": "video"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Video has been uploaded successfully."
+          },
+          "400": {
+            "description": "Error while uploading the video. *Note* the size of the video can cause this."
+          }
+        }
+      }
+    },
+    "/videos/{videoId}": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Uploads videos and processes them",
+        "description": "Videos are uploaded to an S3 bucket waiting on queue for compression and publication to final S3 bucket.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "videoId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Numeric ID of the user to get"
+          }
+        ],
+        "operationId": "getVideoDetails",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "videoTitle": {
+                    "type": "string"
+                  },
+                  "videoFile": {
+                    "type": "object",
+                    "format": "video"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Video has been uploaded successfully."
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "apikeyScheme": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apikeyScheme": {
+        "name": "token",
+        "type": "apiKey",
+        "in": "header"
+      }
+    }
+  }
+}

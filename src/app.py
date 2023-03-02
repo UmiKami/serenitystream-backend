@@ -2,7 +2,7 @@
 import os
 from flask import Flask
 from flask_cors import CORS
-from src.routes import api
+from routes import api
 from flask_swagger_ui import get_swaggerui_blueprint
 
 # flask app setup
@@ -13,7 +13,7 @@ app.url_map.strict_slashes = False # doesn't require a slash at the end of the U
 app.register_blueprint(api, url_prefix="/api/v2") # actually apply the prefix to the bp
 
 SWAGGER_URL = '/api/v2/docs'  # URL for exposing Swagger UI (without trailing '/')
-API_URL = 'http://petstore.swagger.io/v2/swagger.json'  # Our API url (can of course be a local resource)
+API_URL = '/static/swagger.json'  # Our API url (can of course be a local resource)
 
 # Create swagger ui
 swaggerui_blueprint = get_swaggerui_blueprint(
