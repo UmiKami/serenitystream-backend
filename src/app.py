@@ -2,7 +2,7 @@
 import os
 from flask import Flask
 from flask_cors import CORS
-from routes import api
+from src.routes import api
 from flask_swagger_ui import get_swaggerui_blueprint
 
 # flask app setup
